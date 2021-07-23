@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "zetahack-backend"
+version = "0.1.0"
+description = "Backend for zetahack project"
+authors = ["Anand N <anandsanto@live.in>"]
+license = "GNU"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+fastapi = "^0.67.0"
+black = "^21.7b0"
+pydantic = {extras = ["dotenv"], version = "^1.8.2"}
+python-env = "^1.0.0"
+gunicorn = "^20.1.0"
+loguru = "^0.5.3"
+motor = "^2.5.0"
+uvicorn = "^0.14.0"
+
+
+[tool.poetry.dev-dependencies]
+manage-fastapi = "^1.0.0"
+pdbpp = "^0.10.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
