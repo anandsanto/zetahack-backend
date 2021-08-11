@@ -6,7 +6,7 @@ authors = ["Anand N <anandsanto@live.in>"]
 license = "GNU"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "3.9.4"
 fastapi = "^0.67.0"
 black = "^21.7b0"
 pydantic = {extras = ["dotenv"], version = "^1.8.2"}
