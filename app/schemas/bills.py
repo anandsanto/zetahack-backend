@@ -18,6 +18,9 @@ class TransactionSchema(BaseModel):
     customer_id: str
     items: List[ItemSchema]
 
+    class Config:
+        orm_mode = True
+
 class ActionResponseSchema(BaseModel):
     status: bool
     reason_failed: str = None
