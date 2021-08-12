@@ -1,3 +1,5 @@
+import os
+os.system("pip install pandas")
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.logging import CustomizeLogger
@@ -122,7 +124,7 @@ async def delete_sellerfromdb(*, seller_id: str):
 
 @app.on_event("startup")
 async def startup_db():
-    os.system("pip install pandas")
+
     try:
         await connect_to_mongo()
     except Exception as e:
