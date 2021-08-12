@@ -16,6 +16,7 @@ class TransactionSchema(BaseModel):
     timestamp: datetime
     seller_id: str
     customer_id: str
+    status: str
     items: List[ItemSchema]
 
     class Config:
@@ -24,3 +25,8 @@ class TransactionSchema(BaseModel):
 class ActionResponseSchema(BaseModel):
     status: bool
     reason_failed: str = None
+
+class FilterBody(BaseModel):
+    seller_id: Optional[str]
+    product_category: Optional[str]
+    name: Optional[str]

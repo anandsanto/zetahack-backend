@@ -6,7 +6,7 @@ from app.core.crud import (
     add_transaction, delete_transaction,
     update_status, query_bill,
     add_customer, delete_customer,
-    add_seller, delete_seller
+    add_seller, delete_seller, query_cust, query_seller
 )
 import uuid
 import json
@@ -17,7 +17,7 @@ from app.middleware.middleware import (
     neccessary_middlware_ops,
 )
 from app.schemas.bills import (
-    TransactionSchema, ActionResponseSchema,
+    TransactionSchema, ActionResponseSchema, FilterBody
 )
 
 from app.schemas.general import (
@@ -61,11 +61,20 @@ async def add_bill(*, billdata: TransactionSchema):
     ret = await add_transaction(billdata)
     return {'status': ret}
 
-@app.get("/consumer/api/filterbills/{customer_id}")
-async def filter_bill(customer_id : str, skip: int = 0, limit: int = 0):
-    ret = await query_bill(customer_id, skip, limit)
+@app.post("/consumer/api/filterbills/{customer_id}")
+async def filter_bill(*, customer_id : str, status: str, skip: int = 0, limit: int = 0, body: FilterBody):
+    ret = await query_bill(customer_id, body, status, skip, limit)
     return {'data': ret}
 
+@app.post("/consumer/api/getcustomer")
+async def get_cust_details(*, customer_id: str, skip: int, limit: int,projection : dict):
+    ret = await query_cust(customer_id, projection, skip, limit)
+    return {'data': ret}
+
+@app.post("/seller/api/getseller")
+async def get_seller_details(seller_id : str, skip: int, limit: int, projection: dict):
+    ret = await query_seller(seller_id, projection,skip, limit)
+    return {'data': ret}
 
 @app.put("/seller/api/updatebillstatus", response_model = ActionResponseSchema)
 async def update_bill_status(*, bill_id: str, status: str):

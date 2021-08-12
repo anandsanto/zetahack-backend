@@ -46,8 +46,6 @@ def random_date(start, end):
 random.seed(10)
 
 url = "http://127.0.0.1:8000/seller/api/addbill"
-store_id = [1,2,3,4,5]
-customer_id = [1,2,3,4,5,6,7,8,9,10]
 quantity_type = [0,1,3]
 quantized_name = ['AA - Batteries','Sensodyne - 100gm', 'Colgate Brush', 'Lays - med', 'Gems - small', 'Keychain', 'Bottle', 'Soap', 'Shampoo']
 qauntity_name = ['Rice - loose', 'Sugar - loose', 'Flour - loose', 'Apple', 'Mango', 'Potato']
@@ -67,6 +65,13 @@ async def update_bill_data(session):
     random_to_choose_quantized = random.randint(1, len(quantized_name))
     random_to_choose_quantity = random.randint(1, len(qauntity_name))
     random_to_choose_volumetric = random.randint(1, len(volumetric_name))
+    async with session.get("http://127.0.0.1:8000/consumer/api/getcustomer") as resp:
+        data = await resp.json(content_type='application/json')
+        customer_id = data['data']
+    async with session.get("http://127.0.0.1:8000/seller/api/getseller") as resp:
+        data = await resp.json(content_type='application/json')
+        print(data)
+        store_id = data['data']
 
     items = []
     post = {}
@@ -106,13 +111,14 @@ async def update_bill_data(session):
         random_item = random_item % len(volumetric_name)
         items.append(item)
 
-    post["customer_id"] = str(customer_id[random.randint(0,len(customer_id)-1)])
-    post["seller_id"] = str(store_id[random.randint(0,len(store_id)-1)])
+    post["customer_id"] = customer_id[random.randint(0,len(customer_id)-1)]
+    post["seller_id"] = store_id[random.randint(0,len(store_id)-1)]
     d1 = datetime.strptime('8/11/2021 1:30 AM', '%m/%d/%Y %I:%M %p')
     d2 = datetime.strptime('12/21/2021 11:00 PM', '%m/%d/%Y %I:%M %p')
     post["timestamp"] = str(random_date(d1, d2))
     post['bill_id'] = ''
     post['items'] = items
+    post['status'] = 'pending'
     async with session.post(url, json=post) as resp:
         data = await resp.json(content_type='application/json')
         stat = resp.status
@@ -121,7 +127,7 @@ async def update_bill_data(session):
 async def gather():
     fns = []
     async with aiohttp.ClientSession() as session:
-        for _ in range(1, 50):
+        for _ in range(1, 10):
             print("Done")
             fns.append(await update_bill_data(session))
         await asyncio.gather(*fns)

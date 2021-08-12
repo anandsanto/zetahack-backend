@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from ..schemas.bills import (
-    TransactionSchema,
+    TransactionSchema, FilterBody
 )
 
 from ..schemas.general import (
@@ -11,7 +11,7 @@ from . import mongodb
 from pymongo import ReturnDocument
 from datetime import datetime as dt
 import json
-
+import pandas as pd
 
 async def add_transaction(tran: TransactionSchema):
     coll = mongodb.db.client.zetabase.billcollection
@@ -59,13 +59,75 @@ async def update_status(bill_id: str, status: str):
     )
     return doc
 
-async def query_bill(customer_id: str, skip, limit):
+async def query_bill(customer_id: str, body : FilterBody, status: str, skip, limit):
     coll = mongodb.db.client.zetabase.billcollection
-    cursor = coll.find({'customer_id': {'$eq': customer_id}}).skip(skip).limit(limit)
+    ret_doc = []
+    print("BODY", body)
+    if status == 'pending':
+        pipeline = [{'$match' : { 'customer_id' : customer_id }},{'$project': {'seller_id': 1, '_id': 0,'timestamp': 1, 'total': { '$sum': "$items.price"}}}]
+        cursor = coll.aggregate(pipeline)#.skip(skip).limit(limit)
+
+        async for document in cursor:
+            document['timestamp'] = str(document['timestamp'])
+            ret_doc.append(document)
+    else:
+        projection = {'items':1, 'seller_id':1, 'timestamp':1}
+        body = body.dict()
+        body1 = {}
+        print(body)
+        for key in body:
+            if body[key] is not None:
+                if key in ['product_category', 'name'] :
+                    print("KEY", key)
+                    body1['items.'+key] = body[key]
+        print({'customer_id': customer_id, **body1})
+        cursor = coll.find({'customer_id': customer_id,'status': 'success', **body1}, projection).skip(skip).limit(limit)
+        async for document in cursor:
+            ret = {}
+            #print(document)
+            ret['seller_id'] = document['seller_id']
+            ret['timestamp'] = document['timestamp']
+            df = pd.DataFrame(document['items'])
+            #print(df.head())
+            query_df = f"name=='{body1.get('items.name', None)}'"
+            query_df1 = f"product_category=='{body1.get('items.product_category',None)}'"
+            if 'items.name' in body1 and 'items.product_category' in body1:
+
+                query_f = query_df + ' and '+query_df1
+                df = df.query(query_f)
+                #print("Hye", df)
+            elif 'items.name' in body1:
+                query_f = query_df
+                df = df.query(query_f)
+            elif 'items.product_category' in body1:
+                query_f = query_df1
+                df = df.query(query_f)
+            else:
+                pass
+            ret['items'] = df.reset_index(drop=True).to_dict('list')
+            ret_doc.append(ret)
+    return ret_doc
+
+async def query_cust(customer_id: str, projection: dict, skip: int, limit: int):
+    coll = mongodb.db.client.zetabase.custcollection
+    if customer_id is None:
+        query = {}
+    else:
+        query = {'customer_id': customer_id}
+    cursor = coll.find(query, projection).skip(skip).limit(limit)
     ret_doc = []
     async for document in cursor:
-        document['_id'] = str(document['_id'])
-        document['bill_id'] = str(document['bill_id'])
-        document['timestamp'] = str(document['timestamp'])
+        ret_doc.append(document)
+    return ret_doc
+
+async def query_seller(seller_id, projection: dict, skip: int, limit: int):
+    coll = mongodb.db.client.zetabase.sellercollection
+    if seller_id is None:
+        query = {}
+    else:
+        query = {'seller_id': seller_id}
+    cursor = coll.find(query, projection).skip(skip).limit(limit)
+    ret_doc = []
+    async for document in cursor:
         ret_doc.append(document)
     return ret_doc
