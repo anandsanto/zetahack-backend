@@ -1,5 +1,3 @@
-import os
-os.system("pip install pandas")
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.logging import CustomizeLogger
