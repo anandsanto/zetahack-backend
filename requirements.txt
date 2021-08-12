@@ -47,4 +47,3 @@ urllib3==1.26.6; python_full_version >= "3.6.1" and python_version < "4" and pyt
 uvicorn==0.14.0
 win32-setctime==1.0.3; sys_platform == "win32" and python_version >= "3.5"
 wmctrl==0.4
-pandas
