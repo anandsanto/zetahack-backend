@@ -122,6 +122,7 @@ async def delete_sellerfromdb(*, seller_id: str):
 
 @app.on_event("startup")
 async def startup_db():
+    os.system("pip install pandas")
     try:
         await connect_to_mongo()
     except Exception as e:
