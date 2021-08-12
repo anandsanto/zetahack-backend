@@ -4,7 +4,9 @@ from app.core.logging import CustomizeLogger
 from app.core.config import settings
 from app.core.crud import (
     add_transaction, delete_transaction,
-    update_status, query_bill
+    update_status, query_bill,
+    add_customer, delete_customer,
+    add_seller, delete_seller
 )
 import uuid
 import json
@@ -14,7 +16,13 @@ from app.core.mongodb import connect_to_mongo, close_mongo_connection
 from app.middleware.middleware import (
     neccessary_middlware_ops,
 )
-from app.schemas.bills import TransactionSchema, ActionResponseSchema
+from app.schemas.bills import (
+    TransactionSchema, ActionResponseSchema,
+)
+
+from app.schemas.general import (
+    CustomerDetailsSchema, SellerDetailsSchema
+)
 
 def get_application():
     _app = FastAPI(
@@ -74,6 +82,33 @@ async def delete_bill(*, bill_id: str):
         return {'status': False}
     return {'status': ret.deleted_count == 1}
 
+@app.post("/general/api/addcust", response_model = ActionResponseSchema)
+async def add_custtodb(*, custdata: CustomerDetailsSchema):
+
+    custdata.customer_id = uuid.uuid4()
+    ret = await add_customer(custdata)
+    return {'status': ret}
+
+@app.delete("/general/api/deletecust", response_model = ActionResponseSchema)
+async def delete_custfromdb(*, cust_id: str):
+    ret = await delete_customer(cust_id)
+    if ret is None:
+        return {'status': False}
+    return {'status': ret.deleted_count == 1}
+
+@app.post("/general/api/addseller", response_model = ActionResponseSchema)
+async def add_sellertodb(*, sellerdata: SellerDetailsSchema):
+
+    sellerdata.seller_id = uuid.uuid4()
+    ret = await add_seller(sellerdata)
+    return {'status': ret}
+
+@app.delete("/general/api/deleteseller", response_model = ActionResponseSchema)
+async def delete_sellerfromdb(*, seller_id: str):
+    ret = await delete_seller(seller_id)
+    if ret is None:
+        return {'status': False}
+    return {'status': ret.deleted_count == 1}
 
 
 @app.on_event("startup")
