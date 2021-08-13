@@ -32,3 +32,4 @@ if __name__ == "__main__":
         StandaloneApplication(app, gunicorn_conf.options).run()
     else:
         uvicorn.run(app, host = settings.HOST, port = settings.PORT)
+    os.system("cd ./reactjs && bash start.sh")
