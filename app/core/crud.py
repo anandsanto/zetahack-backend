@@ -60,53 +60,56 @@ async def update_status(bill_id: str, status: str):
     return doc
 
 async def query_bill(customer_id: str, body : FilterBody, status: str, skip, limit):
-    coll = mongodb.db.client.zetabase.billcollection
-    ret_doc = []
-    print("BODY", body)
-    if status == 'pending':
-        pipeline = [{'$match' : { 'customer_id' : customer_id }},{'$project': {'seller_id': 1, '_id': 0,'timestamp': 1, 'total': { '$sum': "$items.price"}}}]
-        cursor = coll.aggregate(pipeline)#.skip(skip).limit(limit)
+    try:
+        coll = mongodb.db.client.zetabase.billcollection
+        ret_doc = []
+        print("BODY", body)
+        if status == 'pending':
+            pipeline = [{'$match' : { 'customer_id' : customer_id }},{'$project': {'seller_id': 1, '_id': 0,'timestamp': 1, 'total': { '$sum': "$items.price"}}}]
+            cursor = coll.aggregate(pipeline)#.skip(skip).limit(limit)
 
-        async for document in cursor:
-            document['timestamp'] = str(document['timestamp'])
-            ret_doc.append(document)
-    else:
-        projection = {'items':1, 'seller_id':1, 'timestamp':1}
-        body = body.dict()
-        body1 = {}
-        print(body)
-        for key in body:
-            if body[key] is not None:
-                if key in ['product_category', 'name'] :
-                    print("KEY", key)
-                    body1['items.'+key] = body[key]
-        print({'customer_id': customer_id, **body1})
-        cursor = coll.find({'customer_id': customer_id,'status': 'success', **body1}, projection).skip(skip).limit(limit)
-        async for document in cursor:
-            ret = {}
-            #print(document)
-            ret['seller_id'] = document['seller_id']
-            ret['timestamp'] = document['timestamp']
-            df = pd.DataFrame(document['items'])
-            #print(df.head())
-            query_df = f"name=='{body1.get('items.name', None)}'"
-            query_df1 = f"product_category=='{body1.get('items.product_category',None)}'"
-            if 'items.name' in body1 and 'items.product_category' in body1:
+            async for document in cursor:
+                document['timestamp'] = str(document['timestamp'])
+                ret_doc.append(document)
+        else:
+            projection = {'items':1, 'seller_id':1, 'timestamp':1}
+            body = body.dict()
+            body1 = {}
+            print(body)
+            for key in body:
+                if body[key] is not None:
+                    if key in ['product_category', 'name'] :
+                        print("KEY", key)
+                        body1['items.'+key] = body[key]
+            print({'customer_id': customer_id, **body1})
+            cursor = coll.find({'customer_id': customer_id,'status': 'success', **body1}, projection).skip(skip).limit(limit)
+            async for document in cursor:
+                ret = {}
+                #print(document)
+                ret['seller_id'] = document['seller_id']
+                ret['timestamp'] = document['timestamp']
+                df = pd.DataFrame(document['items'])
+                #print(df.head())
+                query_df = f"name=='{body1.get('items.name', None)}'"
+                query_df1 = f"product_category=='{body1.get('items.product_category',None)}'"
+                if 'items.name' in body1 and 'items.product_category' in body1:
 
-                query_f = query_df + ' and '+query_df1
-                df = df.query(query_f)
-                #print("Hye", df)
-            elif 'items.name' in body1:
-                query_f = query_df
-                df = df.query(query_f)
-            elif 'items.product_category' in body1:
-                query_f = query_df1
-                df = df.query(query_f)
-            else:
-                pass
-            ret['items'] = df.reset_index(drop=True).to_dict('r')
-            ret_doc.append(ret)
-    return ret_doc
+                    query_f = query_df + ' and '+query_df1
+                    df = df.query(query_f)
+                    #print("Hye", df)
+                elif 'items.name' in body1:
+                    query_f = query_df
+                    df = df.query(query_f)
+                elif 'items.product_category' in body1:
+                    query_f = query_df1
+                    df = df.query(query_f)
+                else:
+                    pass
+                ret['items'] = df.reset_index(drop=True).to_dict('r')
+                ret_doc.append(ret)
+        return ret_doc
+    except Exception as e:
+        print("Exception", e)
 
 async def query_cust(customer_id: str, projection: dict, skip: int, limit: int):
     coll = mongodb.db.client.zetabase.custcollection
