@@ -10,8 +10,14 @@ from app.core.crud import (
 )
 import uuid
 import json
-from fastapi.exceptions import RequestValidationError, StarletteHTTPException, ValidationError
+from fastapi.exceptions import (
+    RequestValidationError,
+    StarletteHTTPException,
+    ValidationError
+)
 from fastapi import Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from app.core.mongodb import connect_to_mongo, close_mongo_connection
 from app.middleware.middleware import (
     neccessary_middlware_ops,
@@ -47,12 +53,30 @@ def get_application():
 
 
 app = get_application()
+app.mount("/ui/", StaticFiles(directory="reactjs/build/"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def main():
+    print("HELLo")
+    with open('reactjs/build/index.html') as f:
+        data = f.read()
+    return data
+
+@app.post("/seller/api/addbill", response_model = ActionResponseSchema)
+async def add_bill(*, billdata: TransactionSchema):
+
+    billdata.bill_id = uuid.uuid4()
+    ret = await add_transaction(billdata)
+    return {'status': ret}
+
 
 @app.exception_handler(RequestValidationError)
 @app.exception_handler(ValidationError)
 async def request_exception_handler(request: Request, exc):
     exc_json = json.loads(exc.json())
     print(exc_json)
+
+
 
 @app.post("/seller/api/addbill", response_model = ActionResponseSchema)
 async def add_bill(*, billdata: TransactionSchema):
