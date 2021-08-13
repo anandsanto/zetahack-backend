@@ -104,7 +104,7 @@ async def query_bill(customer_id: str, body : FilterBody, status: str, skip, lim
                 df = df.query(query_f)
             else:
                 pass
-            ret['items'] = df.reset_index(drop=True).to_dict('list')
+            ret['items'] = df.reset_index(drop=True).to_dict('r')
             ret_doc.append(ret)
     return ret_doc
 
