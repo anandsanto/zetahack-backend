@@ -56,8 +56,8 @@ app = get_application()
 app.mount("/ui/", StaticFiles(directory="reactjs/build/"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
-async def main():
-    print("HELLo")
+async def main(request: Request):
+    print(f"Hello from - {request.client.host}")
     with open('reactjs/build/index.html') as f:
         data = f.read()
     return data
