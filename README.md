@@ -12,4 +12,5 @@ KaasuEnga can do amazing things for you!
 * For the fitness freaks, you could even track how often do you consume junk food.
 
 ## Steps to run the project:
-
+* poetry install
+* poetry run python start.py
