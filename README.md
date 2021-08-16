@@ -14,3 +14,7 @@ KaasuEnga can do amazing things for you!
 ## Steps to run the project:
 * poetry install
 * poetry run python start.py
+
+## Deployment Details
+
+A proof of concept for this project is currently online at https://zetahack-backend.herokuapp.com/
